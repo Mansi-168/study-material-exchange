@@ -15,7 +15,7 @@ scope = [
 # Initialize connection to Google Sheets
 def init_google_sheets():
     try:
-        credentials = st.secrets["google"]["service_account"]  # ✅ FIXED
+        credentials = st.secrets["google"]  # ✅ Fetch Google Sheets credentials
         creds = ServiceAccountCredentials.from_json_keyfile_dict(credentials, scope)
         client = gspread.authorize(creds)
         sheet = client.open(SHEET_NAME).sheet1
