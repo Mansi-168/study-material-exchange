@@ -38,20 +38,28 @@ if sheet is not None:
         name = st.text_input("Your Name")
         item = st.selectbox("Item Type", ["Calculator", "Lab File", "Textbook"])
         description = st.text_area("Item Description")
-        price = st.number_input("Selling Price (INR)", min_value=0)
+        original_price = st.number_input("Original Price (INR)", min_value=0)
+
+        if original_price > 0:
+            suggested_seller_price = 0.4 * original_price  # 40% of original price
+            st.write(f"⚠️ Since the product is used, we will buy it for **INR {suggested_seller_price:.2f}** (40% of the original price).")
+            agree_to_sell = st.checkbox("I agree to sell at this price")
+
         contact = st.text_input("Your Contact (Email/Phone)")
         submit = st.form_submit_button("Submit Listing")
         
         if submit:
-            if name and item and description and price and contact:
+            if name and item and description and original_price and contact and agree_to_sell:
+                buyer_price = 0.45 * original_price  # Buyer will see 45% of the original price
+                
                 try:
-                    sheet.append_row([name, item, description, price, contact])
+                    sheet.append_row([name, item, description, suggested_seller_price, buyer_price, contact])
                     st.success("Your item has been listed successfully!")
                     st.rerun()
                 except Exception as e:
                     st.error(f"Error adding item: {str(e)}")
             else:
-                st.warning("Please fill all fields.")
+                st.warning("Please fill all fields and agree to the selling price.")
 
     # Display available items
     st.header("Available Items")
@@ -74,7 +82,10 @@ if sheet is not None:
                 if item_type:
                     df = df[df["Item"].isin(item_type)]
                 
-                st.dataframe(df)
+                # Show buyer price instead of seller price
+                df = df.rename(columns={"Buyer Price": "Price (INR)"})  # Rename for clarity
+                
+                st.dataframe(df[["Item", "Description", "Price (INR)", "Contact"]])
         else:
             st.write("No items available yet. Check back later!")
     except Exception as e:
