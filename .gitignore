@@ -1,0 +1,5 @@
+# Ignore unnecessary files and folders
+.vscode/
+C/
+__pycache__/
+credentials.json  # Important! Prevents sensitive API keys from being pushed
