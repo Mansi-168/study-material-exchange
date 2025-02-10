@@ -15,7 +15,7 @@ scope = [
 # Initialize connection to Google Sheets
 def init_google_sheets():
     try:
-        credentials = st.secrets["google"]
+        credentials = st.secrets["google"]["service_account"]  # ✅ FIXED
         creds = ServiceAccountCredentials.from_json_keyfile_dict(credentials, scope)
         client = gspread.authorize(creds)
         sheet = client.open(SHEET_NAME).sheet1
@@ -59,18 +59,22 @@ if sheet is not None:
         data = sheet.get_all_records()
         if data:
             df = pd.DataFrame(data)
-            
-            # Search functionality
-            search_term = st.text_input("Search items")
-            if search_term:
-                df = df[df.apply(lambda row: row.astype(str).str.contains(search_term, case=False).any(), axis=1)]
-            
-            # Filter functionality
-            item_type = st.multiselect("Filter by Item Type", options=df['Item Type'].unique())
-            if item_type:
-                df = df[df['Item Type'].isin(item_type)]
-            
-            st.dataframe(df)
+
+            # Check if 'Item' column exists (prevents crashes)
+            if "Item" not in df.columns:
+                st.error("Error: 'Item' column not found in Google Sheets data.")
+            else:
+                # Search functionality
+                search_term = st.text_input("Search items")
+                if search_term:
+                    df = df[df.apply(lambda row: row.astype(str).str.contains(search_term, case=False).any(), axis=1)]
+
+                # Filter functionality
+                item_type = st.multiselect("Filter by Item Type", options=df["Item"].unique())  # ✅ FIXED COLUMN NAME
+                if item_type:
+                    df = df[df["Item"].isin(item_type)]
+                
+                st.dataframe(df)
         else:
             st.write("No items available yet. Check back later!")
     except Exception as e:
